@@ -37,8 +37,18 @@ class UserFollow(UserRead):
     followers: Optional[list[UserRead]]
 
 
-from posts.schemas import PostRead
+from posts.schemas import PostRead, PostRel
 
 
 class UserRel(UserRead):
-    posts: Optional["PostRead"]
+    posts: Optional[list["PostRel"]]
+
+
+class UserRelFollow(UserFollow):
+    posts: Optional[list["PostRead"]]
+
+
+class UserRelFollowAll(UserRead):
+    posts: Optional[list["PostRel"]]
+    following: Optional[list[UserRel]]
+    followers: Optional[list[UserRead]]

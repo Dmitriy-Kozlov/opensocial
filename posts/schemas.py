@@ -11,6 +11,9 @@ class PostRead(PostAdd):
     id: int
     created_at: datetime.datetime
 
+    class Config:
+        from_attributes = True
+
 
 class CommentAdd(BaseModel):
     post_id: int
@@ -21,6 +24,9 @@ class CommentRead(CommentAdd):
     id: int
     created_at: datetime.datetime
 
+    class Config:
+        from_attributes = True
+
 
 class PostFileAdd(BaseModel):
     name: str
@@ -30,6 +36,9 @@ class PostFileAdd(BaseModel):
 class PostFileRead(PostFileAdd):
     id: int
     created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
 
 
 from auth.schemas import UserRead
