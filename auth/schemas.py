@@ -32,6 +32,11 @@ class UserUpdate(schemas.BaseUserUpdate):
     is_verified: Optional[bool] = None
 
 
+class UserFollow(UserRead):
+    following: Optional[list[UserRead]]
+    followers: Optional[list[UserRead]]
+
+
 from posts.schemas import PostRead
 
 
