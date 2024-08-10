@@ -16,7 +16,7 @@ from auth.user_manager import current_active_user
 from database import get_async_session
 from posts.schemas import PostRead, PostAdd, PostRel, CommentAdd
 from posts.models import Post, Comment, PostFile
-from auth.models import User
+from auth.models import User, user_following
 
 router = APIRouter(
     prefix="/posts",
@@ -32,6 +32,31 @@ async def get_all_posts(session: AsyncSession = Depends(get_async_session)):
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
             )
+    result = await session.execute(query)
+    posts = result.scalars().all()
+    return posts
+
+
+@router.get("/me", response_model=list[PostRel])
+async def get_all_my_posts(
+                            session: AsyncSession = Depends(get_async_session),
+                            user: User = Depends(current_active_user)):
+
+    # Получаем ID пользователя и всех его подписчиков
+    following_query = select(user_following.c.user_id).where(user_following.c.following_id == user.id)
+    result = await session.execute(following_query)
+    following_ids = [row[0] for row in result.fetchall()]
+    user_and_following_ids = following_ids + [user.id]
+
+    # Запрашиваем посты для текущего пользователя и всех его подписчиков
+    query = (
+        select(Post)
+        .options(selectinload(Post.comments))
+        .options(selectinload(Post.owner))
+        .options(selectinload(Post.files))
+        .filter(Post.owner_id.in_(user_and_following_ids))
+        .order_by(Post.id.desc())
+    )
     result = await session.execute(query)
     posts = result.scalars().all()
     return posts
