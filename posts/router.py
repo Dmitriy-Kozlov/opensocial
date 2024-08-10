@@ -28,7 +28,7 @@ router = APIRouter(
 async def get_all_posts(session: AsyncSession = Depends(get_async_session)):
     query = (
         select(Post)
-        .options(selectinload(Post.comments))
+        .options(selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
             )
@@ -51,7 +51,7 @@ async def get_all_my_posts(
     # Запрашиваем посты для текущего пользователя и всех его подписчиков
     query = (
         select(Post)
-        .options(selectinload(Post.comments))
+        .options(selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
         .filter(Post.owner_id.in_(user_and_following_ids))
@@ -68,7 +68,7 @@ async def get_posts_by_user(
         session: AsyncSession = Depends(get_async_session)):
     query = (
         select(Post)
-        .options(selectinload(Post.comments))
+        .options(selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
         .filter_by(owner_id=user_id)
@@ -83,7 +83,7 @@ async def get_posts_by_id(post_id: int, session: AsyncSession = Depends(get_asyn
     try:
         query = (
             select(Post)
-            .options(selectinload(Post.comments))
+            .options(selectinload(Post.comments).selectinload(Comment.owner))
             .options(selectinload(Post.owner))
             .options(selectinload(Post.files))
             .filter_by(id=post_id)
@@ -135,20 +135,21 @@ async def create_comment(
         new_comment: CommentAdd,
         session: AsyncSession = Depends(get_async_session),
         user: User = Depends(current_active_user)
-                ):
-    try:
-        query = (
-            select(Post)
-            .filter_by(id=new_comment.post_id)
-        )
-        result = await session.execute(query)
-        post = result.scalars().one()
-    except NoResultFound:
+):
+    post = await session.execute(
+        select(Post).filter_by(id=new_comment.post_id)
+    )
+    post = post.scalars().first()
+
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+
     new_comment_db = Comment(**new_comment.dict(), owner=user)
     session.add(new_comment_db)
     await session.commit()
-    return {"status": "Comment created"}
+    await session.refresh(new_comment_db)
+
+    return {"status": "Comment created", "comment": new_comment_db}
 
 
 @router.get("/{post_id}/{file_id}/download")

@@ -8,7 +8,7 @@ from auth.models import User
 from auth.schemas import UserRead, UserFollow, UserRelFollow, UserRel, UserRelFollowAll
 from auth.user_manager import current_active_user
 from database import get_async_session
-from posts.models import Post
+from posts.models import Post, Comment
 
 router = APIRouter(
     prefix="/users",
@@ -34,10 +34,10 @@ async def get_my_posts(session: AsyncSession = Depends(get_async_session),
                         ):
     query = (
         select(User)
-        .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments))
+        .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.files))
         .options(selectinload(User.followers))
-        .options(selectinload(User.posts).selectinload(Post.comments))
+        .options(selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(User.posts).selectinload(Post.files))
         .filter_by(id=user.id)
     )
@@ -55,10 +55,10 @@ async def get_users_by_id_posts(
     try:
         query = (
             select(User)
-            .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments))
+            .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
             .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.files))
             .options(selectinload(User.followers))
-            .options(selectinload(User.posts).selectinload(Post.comments))
+            .options(selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
             .options(selectinload(User.posts).selectinload(Post.files))
             .filter_by(id=user_id)
         )
