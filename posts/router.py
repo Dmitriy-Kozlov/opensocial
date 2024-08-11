@@ -114,9 +114,13 @@ async def create_post(
         file: Optional[UploadFile] = File(None),
         user: User = Depends(current_active_user)
                 ):
+
     new_post_db = Post(text=text, owner=user)
     session.add(new_post_db)
     if file:
+        allowed_types = ["image/jpeg", "image/png"]
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG and PNG images are allowed.")
         await session.flush()
         os.makedirs(f"media/postfiles/{new_post_db.id}", exist_ok=True)
         with open(f"media/postfiles/{new_post_db.id}/{file.filename}", "wb") as buffer:

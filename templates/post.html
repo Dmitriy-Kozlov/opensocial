@@ -20,7 +20,29 @@
             </div>
   </div>
         {% if post.files %}
-  <img src='/media/postfiles/{{post.id}}/{{post.files[0].name}}' class="card-img-top" alt="Some picture">
+
+  <img src='/media/postfiles/{{post.id}}/{{post.files[0].name}}' class="card-img-top" data-bs-toggle="modal" data-bs-target="#exampleModal" alt="Some picture">
+
+
+<!-- Modal -->
+<!--<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">-->
+<div class="modal fade" id="exampleModal" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <img src='/media/postfiles/{{post.id}}/{{post.files[0].name}}' style="max-width: 100%; max-height: 100%" alt="Some picture">
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
 <!--  <img src="{{ url_for('media', path='/postfiles/{{post.id}}/{{post.files[0].name') }}" class="card-img-top" alt="Some picture">-->
         {% endif %}
   <div class="card-body">
