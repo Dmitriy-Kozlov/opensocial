@@ -4,7 +4,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, contains_eager
 
-from auth.models import User
+from auth.models import User, user_following
 from auth.schemas import UserRead, UserFollow, UserRelFollow, UserRel, UserRelFollowAll
 from auth.user_manager import current_active_user
 from database import get_async_session
@@ -94,5 +94,32 @@ async def follow_user(
         raise HTTPException(status_code=404, detail="User not found")
     user.followers.append(current_user)
     session.add(user)
+    await session.commit()
+    return {"message": "OK"}
+
+
+@router.delete("/{user_id}/unfollow")
+async def unfollow_user(
+                user_id: int,
+                session: AsyncSession = Depends(get_async_session),
+                current_user: User = Depends(current_active_user)
+                    ):
+    query = (
+        select(user_following)
+        .where(user_following.c.user_id == user_id)
+        .where(user_following.c.following_id == current_user.id)
+    )
+    result = await session.execute(query)
+    user_following_record = result.fetchone()
+
+    if user_following_record is None:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    delete_query = user_following.delete().where(
+        user_following.c.user_id == user_id,
+        user_following.c.following_id == current_user.id
+    )
+
+    await session.execute(delete_query)
     await session.commit()
     return {"message": "OK"}

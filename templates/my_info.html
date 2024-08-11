@@ -14,7 +14,10 @@
         <h5 class="card-title">Я подписан на:</h5>
           <ul class="list-group list-group-flush">
             {% for user in my_user.following %}
-            <li class="list-group-item"><a href="/pages/posts/user/{{user.id}}">{{user.username}}</a></li>
+            <li class="list-group-item"><a href="/pages/posts/user/{{user.id}}">{{user.username}}</a>
+              <button type="button" onclick="loginFunction({{user.id}})" class="btn btn-outline-primary">Отписаться</button>
+
+            </li>
             {% else %}
             <li class="list-group-item">Нет никого</li>
             {% endfor %}
@@ -37,5 +40,66 @@
     </div>
   </div>
 </div>
+
+{% endblock %}
+
+
+
+{% block script %}
+
+<script>
+        async function loginFunction(user_id) {
+    event.preventDefault();  // Предотвращаем стандартное действие формы
+
+    // Получаем форму и собираем данные из неё
+    try {
+        const response = await fetch('/users/'+user_id+'/unfollow', {
+            method: 'DELETE',
+
+            headers:{
+                    'Content-Type': 'application/json'
+                    },
+            body: JSON.stringify({"user_id": user_id})
+            // body: JSON.stringify({"username": username, "password": password, "grant_type": "password", "scope": "", "client_id": "string", "client_secret": "string"})
+        });
+
+        // Проверяем успешность ответа
+        if (!response.ok) {
+            // Получаем данные об ошибке
+            const errorData = await response.json();
+            displayErrors(errorData);  // Отображаем ошибки
+            return;  // Прерываем выполнение функции
+        }
+            window.location.href = '/pages/users/me';  // Перенаправляем пользователя на страницу логина
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+    }
+}
+
+function displayErrors(errorData) {
+    let message = 'Произошла ошибка';
+
+    if (errorData && errorData.detail) {
+        if (Array.isArray(errorData.detail)) {
+            // Обработка массива ошибок
+            message = errorData.detail.map(error => {
+                if (error.type === 'string_too_short') {
+                    return `Поле "${error.loc[1]}" должно содержать минимум ${error.ctx.min_length} символов.`;
+                }
+                return error.msg || 'Произошла ошибка';
+            }).join('\n');
+        } else {
+            // Обработка одиночной ошибки
+            message = errorData.detail || 'Произошла ошибка';
+        }
+    }
+
+    // Отображение сообщения об ошибке
+    alert(message);
+}
+
+    </script>
 
 {% endblock %}

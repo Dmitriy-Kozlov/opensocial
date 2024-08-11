@@ -13,7 +13,7 @@
         <div class="card-header">
             <div class="row"><div class="col"> <b>{{post.owner.username}}</b></div> <div class="form-text col">{{post.created_at.strftime('%d-%m-%Y %H:%M')}}</div>
                 {% if post.owner not in my_user.following and post.owner != user %}
-                <button type="button" class="btn btn-light">Подписаться</button>
+                <button type="button" class="btn btn-light" onclick="followFunction({{post.owner.id}})">Подписаться</button>
                 {% else %}
                 <button type="button" class="btn btn-light" disabled>Подписаны</button>
                 {% endif %}
@@ -83,6 +83,39 @@
         alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
     }
 }
+
+
+ async function followFunction(user_id) {
+    event.preventDefault();  // Предотвращаем стандартное действие формы
+
+    // Получаем форму и собираем данные из неё
+    try {
+        const response = await fetch('/users/'+user_id+'/follow', {
+            method: 'PUT',
+
+            headers:{
+                    'Content-Type': 'application/json'
+                    },
+            body: JSON.stringify({"user_id": user_id})
+            // body: JSON.stringify({"username": username, "password": password, "grant_type": "password", "scope": "", "client_id": "string", "client_secret": "string"})
+        });
+
+        // Проверяем успешность ответа
+        if (!response.ok) {
+            // Получаем данные об ошибке
+            const errorData = await response.json();
+            displayErrors(errorData);  // Отображаем ошибки
+            return;  // Прерываем выполнение функции
+        }
+      alert("Вы подписаны");
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+    }
+}
+
+
 
 function displayErrors(errorData) {
     let message = 'Произошла ошибка';

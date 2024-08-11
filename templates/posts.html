@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-{% if user_id %}
+{% if user_id and posts %}
 <h1>{{headline}} {{posts[0].owner.username}}</h1>
 {% else %}
 <h1>{{headline}}</h1>
@@ -18,9 +18,9 @@
             <div class="row"><div class="col"> <b><a href="/pages/posts/user/{{post.owner.id}}" >{{post.owner.username}}</a></b></div>
                 <div class="form-text col">{{post.created_at.strftime('%d-%m-%Y %H:%M')}}</div>
                 {% if post.owner not in my_user.following and post.owner != user %}
-                <button type="button" class="btn btn-light">Подписаться</button>
+                <button id="button-follow" type="button" class="btn btn-light" onclick="loginFunction({{post.owner.id}})">Подписаться</button>
                 {% else %}
-                <button type="button" class="btn btn-light" disabled>Подписаны</button>
+                <button id="button-follow-disabled" type="button" class="btn btn-light" disabled>Подписаны</button>
                 {% endif %}
 
             </div>
@@ -38,7 +38,68 @@
         </div>
 
 </div>
+    {% else %}
+    <h5>Нет постов</h5>
     {% endfor %}
 </div>
+
+{% endblock %}
+
+{% block script %}
+
+<script>
+        async function loginFunction(user_id) {
+    event.preventDefault();  // Предотвращаем стандартное действие формы
+
+    // Получаем форму и собираем данные из неё
+    try {
+        const response = await fetch('/users/'+user_id+'/follow', {
+            method: 'PUT',
+
+            headers:{
+                    'Content-Type': 'application/json'
+                    },
+            body: JSON.stringify({"user_id": user_id})
+            // body: JSON.stringify({"username": username, "password": password, "grant_type": "password", "scope": "", "client_id": "string", "client_secret": "string"})
+        });
+
+        // Проверяем успешность ответа
+        if (!response.ok) {
+            // Получаем данные об ошибке
+            const errorData = await response.json();
+            displayErrors(errorData);  // Отображаем ошибки
+            return;  // Прерываем выполнение функции
+        }
+      alert("Вы подписаны");
+
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+    }
+}
+
+function displayErrors(errorData) {
+    let message = 'Произошла ошибка';
+
+    if (errorData && errorData.detail) {
+        if (Array.isArray(errorData.detail)) {
+            // Обработка массива ошибок
+            message = errorData.detail.map(error => {
+                if (error.type === 'string_too_short') {
+                    return `Поле "${error.loc[1]}" должно содержать минимум ${error.ctx.min_length} символов.`;
+                }
+                return error.msg || 'Произошла ошибка';
+            }).join('\n');
+        } else {
+            // Обработка одиночной ошибки
+            message = errorData.detail || 'Произошла ошибка';
+        }
+    }
+
+    // Отображение сообщения об ошибке
+    alert(message);
+}
+
+    </script>
 
 {% endblock %}
