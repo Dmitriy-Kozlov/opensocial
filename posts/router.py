@@ -108,12 +108,13 @@ def checker(data: str = Form(...)):
 
 @router.post("/")
 async def create_post(
-        new_post: PostAdd = Depends(checker),
+        # new_post: PostAdd = Depends(checker),
+        text: str = Form(...),
         session: AsyncSession = Depends(get_async_session),
         file: Optional[UploadFile] = File(None),
         user: User = Depends(current_active_user)
                 ):
-    new_post_db = Post(**new_post.dict(), owner=user)
+    new_post_db = Post(text=text, owner=user)
     session.add(new_post_db)
     if file:
         await session.flush()

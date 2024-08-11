@@ -60,6 +60,11 @@ async def get_posts_html(request: Request, posts=Depends(get_all_my_posts),
                                                                   "my_user": my_user})
 
 
+@router.get('/posts/create')
+async def create_post_html(request: Request,):
+    return templates.TemplateResponse(name='post_form.html', context={'request': request})
+
+
 @router.get('/posts/user/{user_id}')
 async def get_posts_html(user_id: int,
                          request: Request, posts=Depends(get_posts_by_user),
