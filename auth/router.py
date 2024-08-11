@@ -28,17 +28,25 @@ async def get_all_users(session: AsyncSession = Depends(get_async_session)):
     return users
 
 
-@router.get("/me", response_model=UserRelFollowAll)
-async def get_my_posts(session: AsyncSession = Depends(get_async_session),
+# @router.get("/me", response_model=UserRelFollowAll)
+@router.get("/me", response_model=UserFollow)
+async def get_my_users(session: AsyncSession = Depends(get_async_session),
                         user: User = Depends(current_active_user)
                         ):
+    # query = (
+    #     select(User)
+    #     .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
+    #     .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.files))
+    #     .options(selectinload(User.followers))
+    #     .options(selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
+    #     .options(selectinload(User.posts).selectinload(Post.files))
+    #     .filter_by(id=user.id)
+    # )
+
     query = (
         select(User)
-        .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
-        .options(selectinload(User.following).selectinload(User.posts).selectinload(Post.files))
+        .options(selectinload(User.following))
         .options(selectinload(User.followers))
-        .options(selectinload(User.posts).selectinload(Post.comments).selectinload(Comment.owner))
-        .options(selectinload(User.posts).selectinload(Post.files))
         .filter_by(id=user.id)
     )
 

@@ -31,6 +31,7 @@ async def get_all_posts(session: AsyncSession = Depends(get_async_session)):
         .options(selectinload(Post.comments).selectinload(Comment.owner))
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
+        .order_by(Post.id.desc())
             )
     result = await session.execute(query)
     posts = result.scalars().all()

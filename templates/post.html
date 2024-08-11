@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}
+Пост
+{% endblock %}
+
+{% block content %}
+
+<!--<h1>{{headline}}</h1>-->
+
+
+    <div class="card text-center border-primary mb-3" style="max-width: 24rem;" style="width: 18rem;">
+        <div class="card-header">
+            <div class="row"><div class="col"> <b>{{post.owner.username}}</b></div> <div class="form-text col">{{post.created_at.strftime('%d-%m-%Y %H:%M')}}</div>
+                {% if post.owner not in my_user.following and post.owner != user %}
+                <button type="button" class="btn btn-light">Подписаться</button>
+                {% else %}
+                <button type="button" class="btn btn-light" disabled>Подписаны</button>
+                {% endif %}
+            </div>
+  </div>
+        {% if post.files %}
+  <img src='/media/postfiles/{{post.id}}/{{post.files[0].name}}' class="card-img-top" alt="Some picture">
+<!--  <img src="{{ url_for('media', path='/postfiles/{{post.id}}/{{post.files[0].name') }}" class="card-img-top" alt="Some picture">-->
+        {% endif %}
+  <div class="card-body">
+    <p class="card-text">{{post.text}}</p>
+  </div>
+
+<ul class="list-group list-group-flush">
+  <li class="list-group-item">Комментарии <span class="badge rounded-pill bg-danger">{{post.comments | length}}</span></li>
+    {% for comment in post.comments %}
+    <li class="list-group-item"><div class="form-text col">{{comment.created_at.strftime('%d-%m-%Y %H:%M')}}:</div> {{comment}} ({{comment.owner}})</li>
+    {% endfor %}
+</ul>
+<form>
+  <div class="mb-3">
+    <input type="text" class="form-control" id="comment" aria-describedby="emailHelp">
+  </div>
+  <button type="submit" class="btn btn-primary" onclick="loginFunction({{post.id}})">Отправить</button>
+</form>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+        async function loginFunction(post_id) {
+    event.preventDefault();  // Предотвращаем стандартное действие формы
+
+    // Получаем форму и собираем данные из неё
+    const comment = document.getElementById('comment').value;
+    console.log(comment)
+    try {
+        const response = await fetch('/posts/comment', {
+            method: 'POST',
+
+            headers:{
+                    'Content-Type': 'application/json'
+                    },
+            body: JSON.stringify({"text": comment, "post_id": post_id})
+            // body: JSON.stringify({"username": username, "password": password, "grant_type": "password", "scope": "", "client_id": "string", "client_secret": "string"})
+        });
+
+        // Проверяем успешность ответа
+        if (!response.ok) {
+            // Получаем данные об ошибке
+            const errorData = await response.json();
+            displayErrors(errorData);  // Отображаем ошибки
+            return;  // Прерываем выполнение функции
+        }
+
+        // const result = await response.json();
+            window.location.href = '/pages/posts/'+post_id;  // Перенаправляем пользователя на страницу логина
+
+        // if (result) {  // Проверяем наличие сообщения о успешной регистрации
+        //     window.location.href = '/pages/tasks/me';  // Перенаправляем пользователя на страницу логина
+        // } else {
+        //     alert(result.message || 'Неизвестная ошибка');
+        // }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка. Пожалуйста, попробуйте снова.');
+    }
+}
+
+function displayErrors(errorData) {
+    let message = 'Произошла ошибка';
+
+    if (errorData && errorData.detail) {
+        if (Array.isArray(errorData.detail)) {
+            // Обработка массива ошибок
+            message = errorData.detail.map(error => {
+                if (error.type === 'string_too_short') {
+                    return `Поле "${error.loc[1]}" должно содержать минимум ${error.ctx.min_length} символов.`;
+                }
+                return error.msg || 'Произошла ошибка';
+            }).join('\n');
+        } else {
+            // Обработка одиночной ошибки
+            message = errorData.detail || 'Произошла ошибка';
+        }
+    }
+
+    // Отображение сообщения об ошибке
+    alert(message);
+}
+
+    </script>
+  {% endblock %}
