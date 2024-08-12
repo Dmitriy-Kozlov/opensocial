@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import JSONResponse
+
 from auth.schemas import UserCreate, UserRead
 from posts.router import router as post_router
 from auth.router import router as user_router
@@ -29,3 +31,11 @@ app.include_router(
     prefix="/users",
     tags=["users"]
 )
+
+
+@app.exception_handler(413)
+async def request_entity_too_large_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=413,
+        content={"message": "The file you are trying to upload is too large. Please reduce the file size."},
+    )

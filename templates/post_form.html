@@ -93,10 +93,17 @@ async function taskFunction(event) {
     const text = document.getElementById('text').value;
     const fileInput = document.getElementById('file');
     const formData = new FormData();
+    const maxSizeInMB = 10;  // Установите здесь лимит в мегабайтах
+
 
     formData.append('text', text);
 
     if (fileInput.files.length > 0) {
+
+        if (fileInput.files[0].size > maxSizeInMB * 1024 * 1024) {
+        alert("The file size exceeds the allowed limit of " + maxSizeInMB + " MB.");
+        return;
+    }
         formData.append('file', fileInput.files[0]);
     }
 
@@ -105,6 +112,11 @@ async function taskFunction(event) {
             method: 'POST',
             body: formData
         });
+
+        if (response.status === 413) {
+            alert("The file size exceeds the server's limit.");
+            return;
+        }
 
         // Проверяем успешность ответа
         if (!response.ok) {
