@@ -73,6 +73,7 @@ async def get_posts_by_user(
         .options(selectinload(Post.owner))
         .options(selectinload(Post.files))
         .filter_by(owner_id=user_id)
+        .order_by(Post.id.desc())
     )
     result = await session.execute(query)
     posts = result.scalars().all()
